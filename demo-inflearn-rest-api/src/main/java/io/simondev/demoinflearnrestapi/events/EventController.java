@@ -39,15 +39,15 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors erros) {
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
         // 맵핑 과정에서 에러가 발생했을 경우, Bad Request를 발생시킨다
-        if (erros.hasErrors()) {
+        if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
 
         // Validation 검증 과정에서 에러가 발생할 경우, 역시 Bad Request를 발생시킨다.
-        eventValidator.validate(eventDto, erros);
-        if (erros.hasErrors()) {
+        eventValidator.validate(eventDto, errors);
+        if (errors.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
 

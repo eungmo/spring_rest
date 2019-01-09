@@ -91,7 +91,7 @@ public class EventConrollerTests {
     }
 
     @Test
-    public void createEventBadRequest() throws Exception {
+    public void createEvent_Bad_Request() throws Exception {
         Event event = Event.builder()
                 .name("Spring")
                 .description("REST API Development with Spring")
@@ -114,7 +114,19 @@ public class EventConrollerTests {
                 .accept(MediaTypes.HAL_JSON)
                 .content(objectMapper.writeValueAsString(event)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isBadRequest()) // 400 Bad Request 응답을 반환
         ;
+    }
+
+    @Test
+    public void createEvent_Bad_Request_Empty_Input() throws Exception {
+        EventDto eventDto = EventDto.builder().build();
+
+        mockMvc.perform(post("/api/events")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .content(objectMapper.writeValueAsString(eventDto))
+                )
+                .andExpect(status().isBadRequest());
+
     }
 }

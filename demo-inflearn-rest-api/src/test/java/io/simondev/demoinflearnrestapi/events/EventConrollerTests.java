@@ -52,7 +52,7 @@ public class EventConrollerTests {
     @Test
     public void createEvent() throws Exception {
         // 제대로된 요청을 만들어보자
-        Event event = Event.builder()
+        EventDto event = EventDto.builder()
                 .name("Spring")
                 .description("REST API Development with Spring")
                 .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 9, 9, 30))
@@ -63,10 +63,6 @@ public class EventConrollerTests {
                 .maxPrice(200)
                 .limitOfEnrollment(100)
                 .location("Woodlands Bizhub")
-                .free(true)
-                .offline(false)
-                .id(100)
-                .eventStatus(EventStatus.PUBLISHED)
                 .build();
 
         // 이 것을 하지 않으면 NullPointException이 발생한다
@@ -91,6 +87,34 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("id").value(Matchers.not(100)))
                 .andExpect(jsonPath("free").value(Matchers.not(true)))
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+        ;
+    }
+
+    @Test
+    public void createEventBadRequest() throws Exception {
+        Event event = Event.builder()
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 9, 9, 30))
+                .closeEnrollmentDateTime(LocalDateTime.of(2019, 01, 10, 9, 30))
+                .beginEventDateTime(LocalDateTime.of(2019, 01, 11, 9, 30))
+                .endEventDateTime(LocalDateTime.of(2019, 01, 12, 9, 30))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("Woodlands Bizhub")
+                .free(true)
+                .offline(false)
+                .id(100)
+                .eventStatus(EventStatus.PUBLISHED)
+                .build();
+
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
         ;
     }
 }

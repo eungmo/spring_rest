@@ -28,5 +28,5 @@ public class Event {
     // 혹시 나중에 Enum이 추가, 수정, 삭제, 순서가 바뀌면 데이터가 꼬이기 때문에
     // 문자열로 저장하는게 좋다.
     @Enumerated(EnumType.STRING)
-    private EventStatus eventStatus;
+    private EventStatus eventStatus = EventStatus.DRAFT;
 }

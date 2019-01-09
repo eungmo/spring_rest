@@ -1,11 +1,14 @@
 package io.simondev.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,7 +25,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest // 웹과 관련된 빈이 등록
+//@WebMvcTest // 웹과 관련된 빈이 등록
+// 웹 쪽 관련된 테스트는 @SpringBootTest로 통합 테스트하는게 편하다
+// 왜냐하면 모킹할 것이 너무 많기 때문이다.
+// 때문에 테스트하기도 힘들고, 코드 개발 시 테스트 코드를 너무 자주 바꿔야 한다.
+@SpringBootTest
+@AutoConfigureMockMvc
 public class EventConrollerTests {
 
     // mocking 되어있는 Dispatcher Servlet을 상대로 가짜 요청을 만들어 보내고, 응답을 확인할 수 있다.
@@ -39,8 +46,8 @@ public class EventConrollerTests {
 
     // @WebMvcTest 애노테이션은 슬라이싱 테스트이고, 따라서 웹 관련 빈만 등록된다.
     // 즉, repository는 등록이 되지 않기 때문에 MockBean을 등록할 필요가 있다.
-    @MockBean
-    EventRepository eventRepository;
+    //@MockBean
+    //EventRepository eventRepository;
 
     @Test
     public void createEvent() throws Exception {
@@ -56,6 +63,10 @@ public class EventConrollerTests {
                 .maxPrice(200)
                 .limitOfEnrollment(100)
                 .location("Woodlands Bizhub")
+                .free(true)
+                .offline(false)
+                .id(100)
+                .eventStatus(EventStatus.PUBLISHED)
                 .build();
 
         // 이 것을 하지 않으면 NullPointException이 발생한다
@@ -63,8 +74,9 @@ public class EventConrollerTests {
         // null을 반환하기 때문이다. 그리고 null에서 getID()를 하니 NullPointException이 발생한다.
         // 그래서 우리는 스터빙을 해줘야 한다.
         // 즉, 테스트를 하기 위해서는 save를 했을 때, 이벤트를 리턴하라고 구체적인 동작을 명시해야한다.
-        event.setId(10);
-        Mockito.when(eventRepository.save(event)).thenReturn(event);
+        //Mockito.when(eventRepository.save(event)).thenReturn(event);
+
+        // Mocking 테스트가 아니기 때문에, EventDTO을 거쳐서 들어가고, free, offline, id값은 위에 입력한 값으로 들어가지 않게된다.
 
         mockMvc.perform(post("/api/events") // post /api/events 요청을 보내는데
                     .contentType(MediaType.APPLICATION_JSON_UTF8) // 요청 본문에 JSON을 담아서 보낸다
@@ -76,6 +88,9 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("id").exists())
                 .andExpect(header().exists(HttpHeaders.LOCATION)) // Location이 있는지
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE)) // Content-type이 맞는지
+                .andExpect(jsonPath("id").value(Matchers.not(100)))
+                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
         ;
     }
 }

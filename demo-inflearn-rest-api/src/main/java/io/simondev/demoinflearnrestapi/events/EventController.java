@@ -1,5 +1,6 @@
 package io.simondev.demoinflearnrestapi.events;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
@@ -20,17 +21,22 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping(value = "/api/events", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
 public class EventController {
 
-    private EventRepository eventRepository;
+    private final EventRepository eventRepository;
+
+    private final ModelMapper modelMapper;
 
     // 생성자가 하나이고, 생성자로 받아올 파라미터가 이미 빈으로 등록되있다면
     // 생성자 위에 @Autowired라는 애노테이션은 생략이 가능하다.
     // 스프링 4.3부터...
-    public EventController(EventRepository eventRepository) {
+    public EventController(EventRepository eventRepository, ModelMapper modelMapper) {
         this.eventRepository = eventRepository;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping
-    public ResponseEntity createEvent(@RequestBody Event event) {
+    public ResponseEntity createEvent(@RequestBody EventDto eventDto) {
+        Event event = modelMapper.map(eventDto, Event.class); // eventDto에 있는 내용을 Event 타입의 인스턴스로 만들어달라
+
         Event newEvent = eventRepository.save(event);
 
         // HATEOAS에서 제공

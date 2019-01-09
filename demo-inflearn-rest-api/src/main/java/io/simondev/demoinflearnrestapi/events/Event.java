@@ -2,11 +2,14 @@ package io.simondev.demoinflearnrestapi.events;
 
 import lombok.*;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Builder @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter @EqualsAndHashCode(of = "id")
+@Entity
 public class Event {
+    @Id @GeneratedValue
     private Integer id;
     private String name;
     private String description;
@@ -20,5 +23,10 @@ public class Event {
     private int limitOfEnrollment;
     private boolean offline;
     private boolean free;
+    // Enum타입은 기본으로 스트링으로 바꿔준다
+    // 기본 값은 ORDINAL이고, 따라서 0부터 숫자로 저장되는데,
+    // 혹시 나중에 Enum이 추가, 수정, 삭제, 순서가 바뀌면 데이터가 꼬이기 때문에
+    // 문자열로 저장하는게 좋다.
+    @Enumerated(EnumType.STRING)
     private EventStatus eventStatus;
 }

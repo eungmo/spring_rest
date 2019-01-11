@@ -42,13 +42,17 @@ public class EventController {
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
         // 맵핑 과정에서 에러가 발생했을 경우, Bad Request를 발생시킨다
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(errors);
         }
 
         // Validation 검증 과정에서 에러가 발생할 경우, 역시 Bad Request를 발생시킨다.
         eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().build();
+            // 여기에 .body(errors)가 안된다. 왜냐하면 Event 클래스와 다르게 자바 빈 스펙을 따르지 않기 때문에...
+            // 내부적으로는 ObjectMapper의 BeanSerializer를 사용하는데, 자바 빈 스펙을 준수하는 객체만 JSON으로 변환할 수 있다.
+            // JSON으로 변환하려는 이유는 produces = MediaTypes.HAL_JSON_UTF8_VALUE를 명시
+            // 했기 때문이다.
+            return ResponseEntity.badRequest().body(errors);
         }
 
         Event event = modelMapper.map(eventDto, Event.class); // eventDto에 있는 내용을 Event 타입의 인스턴스로 만들어달라

@@ -154,7 +154,13 @@ public class EventConrollerTests {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(objectMapper.writeValueAsString(eventDto))
         )
-                .andExpect(status().isBadRequest());
-
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].objectName").exists()) // 에러 배열들이 나온다 Object Name
+                //.andExpect(jsonPath("$[0].field").exists()) // 어떤 필드에서 발생한 것인가 (필드에러에만 존재)
+                .andExpect(jsonPath("$[0].defaultMessage").exists()) // 기본 메시지
+                .andExpect(jsonPath("$[0].code").exists()) // 에러 코드
+                //.andExpect(jsonPath("$[0].rejectedValue").exists()) // 입력을 거절당한, 에러를 발생시킨 값 (필드 에러에만 존재)
+        ;
     }
 }

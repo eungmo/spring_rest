@@ -163,4 +163,37 @@ public class EventConrollerTests {
                 //.andExpect(jsonPath("$[0].rejectedValue").exists()) // 입력을 거절당한, 에러를 발생시킨 값 (필드 에러에만 존재)
         ;
     }
+
+    @Test
+    @TestDescription("비즈니스 로직 테스트")
+    public void createEvent_Business_Logic() throws Exception {
+        // 제대로된 요청을 만들어보자
+        EventDto event = EventDto.builder()
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 9, 9, 30))
+                .closeEnrollmentDateTime(LocalDateTime.of(2019, 01, 10, 9, 30))
+                .beginEventDateTime(LocalDateTime.of(2019, 01, 11, 9, 30))
+                .endEventDateTime(LocalDateTime.of(2019, 01, 12, 9, 30))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("Woodlands Bizhub")
+                .build();
+
+        mockMvc.perform(post("/api/events") // post /api/events 요청을 보내는데
+                .contentType(MediaType.APPLICATION_JSON_UTF8) // 요청 본문에 JSON을 담아서 보낸다
+                // 좀 더 HTTP 스펙을 따르는 방법으로는 url에 확장자 비슷한 요청을 보내는 것보다는 accept header를 사용하는게 좋겠다.
+                .accept(MediaTypes.HAL_JSON) // HAL JSON 응답을 원한다 (accept header)
+                .content(objectMapper.writeValueAsString(event))) // event 객체를 JSON 문자열로 바꿔서 요청 본문에 넣어준다.
+                .andDo(print())
+                .andExpect(status().isCreated()) // 201 응답을 예상한다.
+                .andExpect(jsonPath("id").exists())
+                .andExpect(header().exists(HttpHeaders.LOCATION)) // Location이 있는지
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE)) // Content-type이 맞는지
+                .andExpect(jsonPath("free").value(false))
+                .andExpect(jsonPath("offline").value(true))
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+        ;
+    }
 }

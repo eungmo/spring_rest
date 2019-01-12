@@ -57,6 +57,10 @@ public class EventController {
 
         Event event = modelMapper.map(eventDto, Event.class); // eventDto에 있는 내용을 Event 타입의 인스턴스로 만들어달라
 
+        // 이벤트를 만들고 저장하기 전에 이벤트를 갱신하여 유료인지 무료인지 여부를 변경해주자
+        // 사실 이 소스는 서비스 쪽으로 위임해도 된다
+        event.update();
+
         Event newEvent = eventRepository.save(event);
 
         // HATEOAS에서 제공

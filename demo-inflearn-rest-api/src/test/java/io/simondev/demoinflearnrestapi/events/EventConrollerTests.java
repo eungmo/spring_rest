@@ -167,7 +167,6 @@ public class EventConrollerTests {
     @Test
     @TestDescription("비즈니스 로직 테스트")
     public void createEvent_Business_Logic() throws Exception {
-        // 제대로된 요청을 만들어보자
         EventDto event = EventDto.builder()
                 .name("Spring")
                 .description("REST API Development with Spring")
@@ -181,18 +180,17 @@ public class EventConrollerTests {
                 .location("Woodlands Bizhub")
                 .build();
 
-        mockMvc.perform(post("/api/events") // post /api/events 요청을 보내는데
-                .contentType(MediaType.APPLICATION_JSON_UTF8) // 요청 본문에 JSON을 담아서 보낸다
-                // 좀 더 HTTP 스펙을 따르는 방법으로는 url에 확장자 비슷한 요청을 보내는 것보다는 accept header를 사용하는게 좋겠다.
-                .accept(MediaTypes.HAL_JSON) // HAL JSON 응답을 원한다 (accept header)
-                .content(objectMapper.writeValueAsString(event))) // event 객체를 JSON 문자열로 바꿔서 요청 본문에 넣어준다.
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event)))
                 .andDo(print())
-                .andExpect(status().isCreated()) // 201 응답을 예상한다.
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").exists())
-                .andExpect(header().exists(HttpHeaders.LOCATION)) // Location이 있는지
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE)) // Content-type이 맞는지
-                .andExpect(jsonPath("free").value(false))
-                .andExpect(jsonPath("offline").value(true))
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("free").value(false)) // 가격이 정해졌기 때문에, false
+                .andExpect(jsonPath("offline").value(true)) // location이 정해졌기 때문에, true
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
         ;
     }

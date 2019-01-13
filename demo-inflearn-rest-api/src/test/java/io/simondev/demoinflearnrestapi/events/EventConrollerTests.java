@@ -49,7 +49,7 @@ public class EventConrollerTests {
     // 즉, repository는 등록이 되지 않기 때문에 MockBean을 등록할 필요가 있다.
     //@MockBean
     //EventRepository eventRepository;
-
+/*
     @Test
     @TestDescription("정상적으로 이벤트를 생성하는 테스트")
     public void createEvent() throws Exception {
@@ -91,6 +91,7 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
         ;
     }
+    */
 
     @Test
     @TestDescription("입력 받을 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
@@ -192,6 +193,10 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("free").value(false)) // 가격이 정해졌기 때문에, false
                 .andExpect(jsonPath("offline").value(true)) // location이 정해졌기 때문에, true
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.query-events").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
+
         ;
     }
 }

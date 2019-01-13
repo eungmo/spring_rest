@@ -3,6 +3,7 @@ package io.simondev.demoinflearnrestapi.events;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
@@ -64,9 +65,15 @@ public class EventController {
         Event newEvent = eventRepository.save(event);
 
         // HATEOAS에서 제공
-        URI createdUri = linkTo(EventController.class).slash("{id}").toUri();
+        ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash("{id}");
+        URI createdUri = selfLinkBuilder.toUri();
 
         // Body에 이벤트를 담아서 리턴
-        return ResponseEntity.created(createdUri).body(event);
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        // 이벤트 리소스에 넣었음 eventResource.add(selfLinkBuilder.withSelfRel());
+        // PUT 요청을 하기 때문에 self와 링크가 같아도 상관없다.
+        eventResource.add(selfLinkBuilder.withRel("update-event"));
+        return ResponseEntity.created(createdUri).body(eventResource);
     }
 }

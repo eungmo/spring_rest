@@ -1,16 +1,19 @@
 package io.simondev.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.simondev.demoinflearnrestapi.common.RestDocsConfiguration;
 import io.simondev.demoinflearnrestapi.common.TestDescription;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +22,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
+import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -32,6 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // 때문에 테스트하기도 힘들고, 코드 개발 시 테스트 코드를 너무 자주 바꿔야 한다.
 @SpringBootTest
 @AutoConfigureMockMvc
+// REST Docs를 설정
+@AutoConfigureRestDocs
+// 커스터마이징한 설정을 적용
+@Import(RestDocsConfiguration.class)
 public class EventConrollerTests {
 
     // mocking 되어있는 Dispatcher Servlet을 상대로 가짜 요청을 만들어 보내고, 응답을 확인할 수 있다.
@@ -196,7 +210,56 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.query-events").exists())
                 .andExpect(jsonPath("_links.update-event").exists())
-
+                .andDo(document("create-event",
+                        // 링크 정보 snippet로 추가
+                        links(
+                                linkWithRel("self").description("Link to self"),
+                                linkWithRel("query-events").description("Link to query event"),
+                                linkWithRel("update-event").description("Link to update an existing event")
+                        ),
+                        // Request 헤더를 snippet로 추가
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        requestFields(
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("date time of begin enrollment of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("date time of close enrollment of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of begin event of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of end event of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description(" limit of enrollment")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("Location header: creating a new event url"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("Content type: HAL JSON")
+                        ),
+                        // relaxed prefix를 사용하면, 모든 부분을 문서활 필요가 없어진다.
+                        //relaxedResponseFields(
+                        responseFields(
+                                fieldWithPath("id").description("identifier of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("date time of begin enrollment of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("date time of close enrollment of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of begin event of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of end event of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description(" limit of enrollment"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells if this event is offline event or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+                                fieldWithPath("_links.self.href").description("link to query event list"),
+                                fieldWithPath("_links.query-events.href").description("link to query event list"),
+                                fieldWithPath("_links.update-event.href").description("link to update existing event")
+                        )
+                ))
         ;
     }
 }

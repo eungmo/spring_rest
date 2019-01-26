@@ -2,6 +2,7 @@ package io.simondev.demoinflearnrestapi.events;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
@@ -74,6 +75,7 @@ public class EventController {
         // 이벤트 리소스에 넣었음 eventResource.add(selfLinkBuilder.withSelfRel());
         // PUT 요청을 하기 때문에 self와 링크가 같아도 상관없다.
         eventResource.add(selfLinkBuilder.withRel("update-event"));
+        eventResource.add(new Link("/docs/index.html#resources-events-create").withRel("profile"));
         return ResponseEntity.created(createdUri).body(eventResource);
     }
 }

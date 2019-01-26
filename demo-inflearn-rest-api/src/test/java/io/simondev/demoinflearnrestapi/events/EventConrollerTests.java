@@ -207,15 +207,13 @@ public class EventConrollerTests {
                 .andExpect(jsonPath("free").value(false)) // 가격이 정해졌기 때문에, false
                 .andExpect(jsonPath("offline").value(true)) // location이 정해졌기 때문에, true
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
-                .andExpect(jsonPath("_links.self").exists())
-                .andExpect(jsonPath("_links.query-events").exists())
-                .andExpect(jsonPath("_links.update-event").exists())
                 .andDo(document("create-event",
                         // 링크 정보 snippet로 추가
                         links(
                                 linkWithRel("self").description("Link to self"),
                                 linkWithRel("query-events").description("Link to query event"),
-                                linkWithRel("update-event").description("Link to update an existing event")
+                                linkWithRel("update-event").description("Link to update an existing event"),
+                                linkWithRel("profile").description("Link to profile")
                         ),
                         // Request 헤더를 snippet로 추가
                         requestHeaders(
@@ -257,7 +255,8 @@ public class EventConrollerTests {
                                 fieldWithPath("eventStatus").description("event status"),
                                 fieldWithPath("_links.self.href").description("link to query event list"),
                                 fieldWithPath("_links.query-events.href").description("link to query event list"),
-                                fieldWithPath("_links.update-event.href").description("link to update existing event")
+                                fieldWithPath("_links.update-event.href").description("link to update existing event"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
                         )
                 ))
         ;

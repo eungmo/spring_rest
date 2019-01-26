@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureRestDocs
 // 커스터마이징한 설정을 적용
 @Import(RestDocsConfiguration.class)
+@ActiveProfiles("test")
 public class EventConrollerTests {
 
     // mocking 되어있는 Dispatcher Servlet을 상대로 가짜 요청을 만들어 보내고, 응답을 확인할 수 있다.
@@ -171,11 +173,12 @@ public class EventConrollerTests {
         )
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0].objectName").exists()) // 에러 배열들이 나온다 Object Name
+                .andExpect(jsonPath("content[0].objectName").exists()) // 에러 배열들이 나온다 Object Name
                 //.andExpect(jsonPath("$[0].field").exists()) // 어떤 필드에서 발생한 것인가 (필드에러에만 존재)
-                .andExpect(jsonPath("$[0].defaultMessage").exists()) // 기본 메시지
-                .andExpect(jsonPath("$[0].code").exists()) // 에러 코드
+                .andExpect(jsonPath("content[0].defaultMessage").exists()) // 기본 메시지
+                .andExpect(jsonPath("content[0].code").exists()) // 에러 코드
                 //.andExpect(jsonPath("$[0].rejectedValue").exists()) // 입력을 거절당한, 에러를 발생시킨 값 (필드 에러에만 존재)
+                .andExpect(jsonPath("_links.index").exists()) // 404 에러 발생 시, index 링크를 제공하는 지 확인 (로고 버튼 같은 것)
         ;
     }
 

@@ -31,6 +31,8 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -189,7 +191,7 @@ public class EventConrollerTests {
     }
 
     @Test
-    @TestDescription("비즈니스 로직 테스트")
+    @TestDescription("Create an event")
     public void createEvent_Business_Logic() throws Exception {
         EventDto event = EventDto.builder()
                 .name("Spring")
@@ -205,9 +207,10 @@ public class EventConrollerTests {
                 .build();
 
         mockMvc.perform(post("/api/events")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaTypes.HAL_JSON)
-                .content(objectMapper.writeValueAsString(event)))
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaTypes.HAL_JSON)
+                    .content(objectMapper.writeValueAsString(event))
+                )
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").exists())
@@ -262,7 +265,7 @@ public class EventConrollerTests {
                                 fieldWithPath("free").description("it tells if this event is free or not"),
                                 fieldWithPath("offline").description("it tells if this event is offline event or not"),
                                 fieldWithPath("eventStatus").description("event status"),
-                                fieldWithPath("_links.self.href").description("link to query event list"),
+                                fieldWithPath("_links.self.href").description("link to the self"),
                                 fieldWithPath("_links.query-events.href").description("link to query event list"),
                                 fieldWithPath("_links.update-event.href").description("link to update existing event"),
                                 fieldWithPath("_links.profile.href").description("link to profile")
@@ -290,15 +293,65 @@ public class EventConrollerTests {
                     .param("page", "1")
                     .param("size","10")
                     .param("sort", "name,DESC")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaTypes.HAL_JSON)
                 )
+
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("page").exists())
                 .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                .andDo(document("query-events"))
-
+                .andDo(document("query-events",
+                        links(
+                                linkWithRel("first").description("link to go to the first page"),
+                                linkWithRel("prev").description("link to go to the previous page"),
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("next").description("link to go to the next page"),
+                                linkWithRel("last").description("link to go to the last page"),
+                                linkWithRel("profile").description("link to profile")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        requestParameters(
+                                parameterWithName("page").description("the page number"),
+                                parameterWithName("size").description("the number of items in a page"),
+                                parameterWithName("sort").description("sort of items")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("Content type: HAL JSON")
+                        ),
+                        responseFields(
+                                fieldWithPath("_embedded.eventList[].id").description("each item's id"),
+                                fieldWithPath("_embedded.eventList[].name").description("each item's name"),
+                                fieldWithPath("_embedded.eventList[].description").description("each item's description"),
+                                fieldWithPath("_embedded.eventList[].beginEnrollmentDateTime").description("each item's begin enrollment datetime"),
+                                fieldWithPath("_embedded.eventList[].closeEnrollmentDateTime").description("each item's close enrollment datetime"),
+                                fieldWithPath("_embedded.eventList[].beginEventDateTime").description("each item's begin event datetime"),
+                                fieldWithPath("_embedded.eventList[].endEventDateTime").description("each item's end event datetime"),
+                                fieldWithPath("_embedded.eventList[].location").description("each item's location"),
+                                fieldWithPath("_embedded.eventList[].basePrice").description("each item's base price"),
+                                fieldWithPath("_embedded.eventList[].maxPrice").description("each item's max price"),
+                                fieldWithPath("_embedded.eventList[].limitOfEnrollment").description("each item's limit of enrollment"),
+                                fieldWithPath("_embedded.eventList[].offline").description("each item's offline"),
+                                fieldWithPath("_embedded.eventList[].free").description("each item's free"),
+                                fieldWithPath("_embedded.eventList[].eventStatus").description("each item's event status"),
+                                fieldWithPath("_embedded.eventList[]._links.self.href").description("each item's self link"),
+                                fieldWithPath("_links.first.href").description("link to the first page"),
+                                fieldWithPath("_links.prev.href").description("link to the previous page"),
+                                fieldWithPath("_links.self.href").description("link to the self"),
+                                fieldWithPath("_links.next.href").description("link to the next page"),
+                                fieldWithPath("_links.last.href").description("link to the last page"),
+                                fieldWithPath("_links.profile.href").description("link to profile"),
+                                fieldWithPath("page.size").description("the number of items in a page"),
+                                fieldWithPath("page.totalElements").description("the number of items"),
+                                fieldWithPath("page.totalPages").description("the number of page"),
+                                fieldWithPath("page.number").description("the page number")
+                        )
+                ))
         ;
     }
 

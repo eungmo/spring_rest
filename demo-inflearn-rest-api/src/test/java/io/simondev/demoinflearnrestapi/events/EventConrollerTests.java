@@ -22,6 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -30,6 +31,7 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -65,6 +67,10 @@ public class EventConrollerTests {
     // 즉, repository는 등록이 되지 않기 때문에 MockBean을 등록할 필요가 있다.
     //@MockBean
     //EventRepository eventRepository;
+
+    @Autowired
+    EventRepository eventRepository;
+
 /*
     @Test
     @TestDescription("정상적으로 이벤트를 생성하는 테스트")
@@ -264,4 +270,45 @@ public class EventConrollerTests {
                 ))
         ;
     }
+
+    @Test
+    @TestDescription("30개의 이벤트를 10개씩 볼 때, 두 번째 페이지 조회하기")
+    public void queryEvents() throws Exception {
+        // Given : 이벤트 30개
+        IntStream.range(0, 30).forEach(this::generateEvent); // 메서드 레퍼런스로 간결하게
+        // Same: Lambda
+        //IntStream.range(0, 30).forEach(i -> {
+        //    this.generateEvent(i);
+        //});
+        // Same2: Loop
+        //for (int i = 0; i < 30; i++) {
+        //    this.generateEvent(i);
+        //}
+
+        // When : 조회한다
+        this.mockMvc.perform(get("/api/events")
+                    .param("page", "1")
+                    .param("size","10")
+                    .param("sort", "name,DESC")
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-events"))
+
+        ;
+    }
+
+    private void generateEvent(int index) {
+        Event event = Event.builder()
+                .name("Event " + index)
+                .description("Test Event")
+                .build();
+
+        this.eventRepository.save(event);
+    }
+
 }

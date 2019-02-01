@@ -1,6 +1,7 @@
 package io.simondev.demoinflearnrestapi.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.simondev.demoinflearnrestapi.common.BaseControllerTest;
 import io.simondev.demoinflearnrestapi.common.RestDocsConfiguration;
 import io.simondev.demoinflearnrestapi.common.TestDescription;
 import jdk.jfr.ContentType;
@@ -43,30 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-//@WebMvcTest // 웹과 관련된 빈이 등록
-// 웹 쪽 관련된 테스트는 @SpringBootTest로 통합 테스트하는게 편하다
-// 왜냐하면 모킹할 것이 너무 많기 때문이다.
-// 때문에 테스트하기도 힘들고, 코드 개발 시 테스트 코드를 너무 자주 바꿔야 한다.
-@SpringBootTest
-@AutoConfigureMockMvc
-// REST Docs를 설정
-@AutoConfigureRestDocs
-// 커스터마이징한 설정을 적용
-@Import(RestDocsConfiguration.class)
-@ActiveProfiles("test")
-public class EventConrollerTests {
-
-    // mocking 되어있는 Dispatcher Servlet을 상대로 가짜 요청을 만들어 보내고, 응답을 확인할 수 있다.
-    // 슬라이싱 테스트: 웹과 관련된 빈만 등록해서 사용한다. (단위테스트라고 하기에는 많은 것이 개입됨)
-    // 그래도 웹서버를 띄우는 것보다는 빠름
-    @Autowired
-    MockMvc mockMvc;
-
-    // 스프링 부트를 사용할 때, Mapping Jackson Json이 의존성으로 들어가 있으면,
-    // ObjectMapper를 자동으로 Bean 등록해준다.
-    @Autowired
-    ObjectMapper objectMapper;
+public class EventConrollerTests extends BaseControllerTest {
 
     // @WebMvcTest 애노테이션은 슬라이싱 테스트이고, 따라서 웹 관련 빈만 등록된다.
     // 즉, repository는 등록이 되지 않기 때문에 MockBean을 등록할 필요가 있다.
@@ -75,9 +53,6 @@ public class EventConrollerTests {
 
     @Autowired
     EventRepository eventRepository;
-
-    @Autowired
-    ModelMapper modelMapper;
 
 /*
     @Test

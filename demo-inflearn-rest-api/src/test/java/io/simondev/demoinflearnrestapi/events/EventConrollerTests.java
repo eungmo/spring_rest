@@ -35,6 +35,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.paramete
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -355,13 +356,71 @@ public class EventConrollerTests {
         ;
     }
 
-    private void generateEvent(int index) {
+    private Event generateEvent(int index) {
         Event event = Event.builder()
                 .name("Event " + index)
                 .description("Test Event")
                 .build();
 
-        this.eventRepository.save(event);
+        return this.eventRepository.save(event);
     }
+
+    @Test
+    @TestDescription("기존의 이벤트를 하나 조회하기")
+    public void getEvent() throws Exception {
+        // Given : 이벤트 하나 생성
+        Event event = this.generateEvent(100);
+
+        // When & Then
+        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("get-event"))
+        ;
+    }
+
+    @Test
+    @TestDescription("없는 이벤트 하나를 조회했을 때, 404 응답받기")
+    public void getEvent404() throws Exception {
+        this.mockMvc.perform(get("/api/events/{id}", 1111111111))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @TestDescription("하나의 이벤트 수정하기")
+    public void eventUpdate() throws Exception {
+        EventDto event = EventDto.builder()
+
+                .name("Spring2")
+                .description("Rest API Advanced Course")
+                .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 27, 9, 30))
+                .closeEnrollmentDateTime(LocalDateTime.of(2019, 01, 28, 9, 30))
+                .beginEventDateTime(LocalDateTime.of(2019, 01, 29, 9, 30))
+                .endEventDateTime(LocalDateTime.of(2019, 01, 30, 9, 30))
+                .basePrice(150)
+                .maxPrice(300)
+                .limitOfEnrollment(50)
+                .location("Woodlands Bizhub")
+                .build();
+
+        this.mockMvc.perform(put("/api/event/{id}", 1)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaTypes.HAL_JSON)
+                    .content(objectMapper.writeValueAsString(event))
+                )
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @TestDescription("없는 이벤트 수정하기")
+    public void eventUpdate404() throws Exception {
+        this.mockMvc.perform(put("/api/event/{id}", 1111111111))
+                .andExpect(status().isBadRequest());
+    }
+
+    //TODO 입력 데이터 이상한 경우, 400 BAD_REQUEST
 
 }

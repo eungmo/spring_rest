@@ -1,6 +1,7 @@
 package io.simondev.demoinflearnrestapi.events;
 
 import io.simondev.demoinflearnrestapi.common.ErrorsResource;
+import org.apache.coyote.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,13 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -102,4 +101,50 @@ public class EventController {
         return ResponseEntity.ok(pagedResources);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity getEvent(@PathVariable Integer id) {
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if (optionalEvent.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Event event = optionalEvent.get();
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(new Link("/docs/index.html#resources-events-get").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody @Valid EventDto eventDto, Errors errors) {
+        // mapping error
+        if (errors.hasErrors()) {
+            return badRequest(errors);
+        }
+
+        // validation error
+        eventValidator.validate(eventDto, errors);
+        if (errors.hasErrors()) {
+            return badRequest(errors);
+        }
+
+        Event event = modelMapper.map(eventDto, Event.class);
+        event.update();
+
+        if (!eventRepository.existsById(id)) {
+            //TODO create Errors
+            return badRequest(errors);
+        } else {
+            Event updatedEvent = eventRepository.save(event);
+
+            ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash("{id}");
+            URI updatedUri = selfLinkBuilder.toUri();
+
+            EventResource eventResource = new EventResource(event);
+            eventResource.add(linkTo(EventController.class).withRel("query-events"));
+            eventResource.add(selfLinkBuilder.withRel("update-event"));
+            eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
+            return ResponseEntity.created(updatedUri).body(eventResource);
+        }
+    }
 }

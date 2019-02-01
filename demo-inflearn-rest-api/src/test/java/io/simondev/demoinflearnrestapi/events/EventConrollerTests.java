@@ -7,6 +7,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -73,6 +74,9 @@ public class EventConrollerTests {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    ModelMapper modelMapper;
 
 /*
     @Test
@@ -192,7 +196,7 @@ public class EventConrollerTests {
     }
 
     @Test
-    @TestDescription("Create an event")
+    @TestDescription("정상적으로 이벤트를 생성하는 테스트")
     public void createEvent_Business_Logic() throws Exception {
         EventDto event = EventDto.builder()
                 .name("Spring")
@@ -360,6 +364,17 @@ public class EventConrollerTests {
         Event event = Event.builder()
                 .name("Event " + index)
                 .description("Test Event")
+                .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 9, 9, 30))
+                .closeEnrollmentDateTime(LocalDateTime.of(2019, 01, 10, 9, 30))
+                .beginEventDateTime(LocalDateTime.of(2019, 01, 11, 9, 30))
+                .endEventDateTime(LocalDateTime.of(2019, 01, 12, 9, 30))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("Woodlands Bizhub")
+                .free(false)
+                .offline(true)
+                .eventStatus(EventStatus.DRAFT)
                 .build();
 
         return this.eventRepository.save(event);
@@ -390,37 +405,121 @@ public class EventConrollerTests {
     }
 
     @Test
-    @TestDescription("하나의 이벤트 수정하기")
-    public void eventUpdate() throws Exception {
-        EventDto event = EventDto.builder()
+    @TestDescription("에벤트를 정상적으로 수정하기")
+    public void updateEvent() throws Exception {
+        // Given
+        Event event = this.generateEvent(200);
+        // modelMapper를 사용해 event를 eventDto에 담는다.
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+        String eventName = "Updated Event";
+        eventDto.setName(eventName);
 
-                .name("Spring2")
-                .description("Rest API Advanced Course")
-                .beginEnrollmentDateTime(LocalDateTime.of(2019, 01, 27, 9, 30))
-                .closeEnrollmentDateTime(LocalDateTime.of(2019, 01, 28, 9, 30))
-                .beginEventDateTime(LocalDateTime.of(2019, 01, 29, 9, 30))
-                .endEventDateTime(LocalDateTime.of(2019, 01, 30, 9, 30))
-                .basePrice(150)
-                .maxPrice(300)
-                .limitOfEnrollment(50)
-                .location("Woodlands Bizhub")
-                .build();
-
-        this.mockMvc.perform(put("/api/event/{id}", 1)
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaTypes.HAL_JSON)
-                    .content(objectMapper.writeValueAsString(event))
+                    .content(objectMapper.writeValueAsString(eventDto))
                 )
-                .andExpect(status().isOk());
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").value(eventName))
+                .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("update-event",
+                        links(
+                                linkWithRel("self").description("Link to Self"),
+                                linkWithRel("profile").description("Link to profile")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        requestFields(
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("date time of begin enrollment of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("date time of close enrollment of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of begin event of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of end event of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description(" limit of enrollment")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("Content type: HAL JSON")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("identifier of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("date time of begin enrollment of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("date time of close enrollment of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of begin event of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of end event of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description(" limit of enrollment"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells if this event is offline event or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+                                fieldWithPath("_links.self.href").description("link to the self"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
+                        )
+                ))
+        ;
     }
 
     @Test
-    @TestDescription("없는 이벤트 수정하기")
-    public void eventUpdate404() throws Exception {
-        this.mockMvc.perform(put("/api/event/{id}", 1111111111))
+    @TestDescription("입력값이 비어있는 경우에 이벤트 수정 실패")
+    public void updateEvent400_Empty() throws Exception {
+        // Given
+        Event event = this.generateEvent(200);
+        EventDto eventDto = new EventDto();
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaTypes.HAL_JSON)
+                    .content(objectMapper.writeValueAsString(eventDto))
+                )
+                .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
-    //TODO 입력 데이터 이상한 경우, 400 BAD_REQUEST
+    @Test
+    @TestDescription("입력값이 잘못된 경우에 이벤트 수정 실패")
+    public void updateEvent400_Wrong() throws Exception {
+        // Given
+        Event event = this.generateEvent(200);
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+        eventDto.setBasePrice(20000);
+        eventDto.setMaxPrice(1000);
 
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", event.getId())
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(eventDto))
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @TestDescription("졵하지 않는 이벤트 수정 실패")
+    public void updateEvent404() throws Exception {
+        // Given
+        Event event = this.generateEvent(200);
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/1111111")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(eventDto))
+        )
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
 }

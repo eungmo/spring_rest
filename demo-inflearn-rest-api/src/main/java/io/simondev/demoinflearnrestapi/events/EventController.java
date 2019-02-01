@@ -116,35 +116,34 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody @Valid EventDto eventDto, Errors errors) {
-        // mapping error
+    public ResponseEntity updateEvent(@PathVariable Integer id,
+                                      @RequestBody @Valid EventDto eventDto, Errors errors) {
         if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
-        // validation error
-        eventValidator.validate(eventDto, errors);
+        this.eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
-        Event event = modelMapper.map(eventDto, Event.class);
-        event.update();
-
-        if (!eventRepository.existsById(id)) {
-            //TODO create Errors
-            return badRequest(errors);
-        } else {
-            Event updatedEvent = eventRepository.save(event);
-
-            ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash("{id}");
-            URI updatedUri = selfLinkBuilder.toUri();
-
-            EventResource eventResource = new EventResource(event);
-            eventResource.add(linkTo(EventController.class).withRel("query-events"));
-            eventResource.add(selfLinkBuilder.withRel("update-event"));
-            eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
-            return ResponseEntity.created(updatedUri).body(eventResource);
+        // 이벤트가 존재하는지 체크
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if (optionalEvent.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+
+        Event existringEvent = optionalEvent.get();
+        //existringEvent.setName(eventDto.getName());
+
+        // modelMapper로 수정된 내용을 덮어씀 (첫 번째에서 두 번째로)
+        this.modelMapper.map(eventDto, existringEvent);
+        // 우리는 서비스를 안 만들었기 때문에 명시적으로 리파지토리에 저장
+        Event updatedEvent = eventRepository.save(existringEvent);
+
+        EventResource eventResource = new EventResource(updatedEvent);
+        eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
     }
 }

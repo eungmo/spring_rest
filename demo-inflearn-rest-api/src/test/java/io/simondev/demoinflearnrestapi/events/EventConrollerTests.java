@@ -3,6 +3,7 @@ package io.simondev.demoinflearnrestapi.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.simondev.demoinflearnrestapi.common.RestDocsConfiguration;
 import io.simondev.demoinflearnrestapi.common.TestDescription;
+import jdk.jfr.ContentType;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -387,13 +388,47 @@ public class EventConrollerTests {
         Event event = this.generateEvent(100);
 
         // When & Then
-        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+        this.mockMvc.perform(get("/api/events/{id}", event.getId())
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaTypes.HAL_JSON)
+                )
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name").exists())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                .andDo(document("get-event"))
+                .andDo(document("get-event",
+                        links(
+                                linkWithRel("self").description("Link to Self"),
+                                linkWithRel("profile").description("Link to profile")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("Content type: HAL JSON")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("identifier of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("date time of begin enrollment of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("date time of close enrollment of new event"),
+                                fieldWithPath("beginEventDateTime").description("date time of begin event of new event"),
+                                fieldWithPath("endEventDateTime").description("date time of end event of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("base price of new event"),
+                                fieldWithPath("maxPrice").description("max price of new event"),
+                                fieldWithPath("limitOfEnrollment").description(" limit of enrollment"),
+                                fieldWithPath("free").description("it tells if this event is free or not"),
+                                fieldWithPath("offline").description("it tells if this event is offline event or not"),
+                                fieldWithPath("eventStatus").description("event status"),
+                                fieldWithPath("_links.self.href").description("link to the self"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
+                        )
+                ))
         ;
     }
 
@@ -405,7 +440,7 @@ public class EventConrollerTests {
     }
 
     @Test
-    @TestDescription("에벤트를 정상적으로 수정하기")
+    @TestDescription("이벤트를 정상적으로 수정하기")
     public void updateEvent() throws Exception {
         // Given
         Event event = this.generateEvent(200);

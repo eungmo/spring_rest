@@ -1,5 +1,6 @@
 package io.simondev.demoinflearnrestapi.events;
 
+import io.simondev.demoinflearnrestapi.accounts.Account;
 import lombok.*;
 
 import javax.persistence.*;
@@ -29,6 +30,10 @@ public class Event {
     // 문자열로 저장하는게 좋다.
     @Enumerated(EnumType.STRING)
     private EventStatus eventStatus = EventStatus.DRAFT;
+    // 이벤트에서만 Owner를 참조할 수 있도록 단방향 맵핑을 한다.
+    @ManyToOne
+    private Account manager;
+
 
     public void update() {
         // Update free

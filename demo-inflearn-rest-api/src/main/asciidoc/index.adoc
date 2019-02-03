@@ -1,5 +1,5 @@
-= Natural REST API Guide
-백기선;
+= Event Example REST API Guide
+조승모;
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
@@ -11,6 +11,9 @@
 
 [[overview]]
 = 개요
+
+* 본 REST API는 새로운 'Remote Monitor'이라는 REST API 기반 토이 프로젝트를 진행하기 전에 공부하기 위해 만드는 예제입니다. +
+* 이 프로젝트는 원격지에 있는 장비들의 실시간 상태와 예상되는 문제에 대한 주간/월간 리포트를 제공할 것입니다. +
 
 [[overview-http-verbs]]
 == HTTP 동사

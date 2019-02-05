@@ -27,24 +27,24 @@ public class AppConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    // 애플리케이션 시작 시에 테스트용 유저를 하나 만들어서 저장해보자
-    @Bean
-    public ApplicationRunner applicationRunner() {
-        return new ApplicationRunner() {
-
-            @Autowired
-            AccountService accountService;
-
-            @Override
-            public void run(ApplicationArguments args) throws Exception {
-                Account seungmo = Account.builder()
-                        .email("seungmo@email.com")
-                        .password("seungmo")
-                        .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
-                        .build();
-                accountService.saveAccount(seungmo);
-
-            }
-        };
-    }
+//    // 애플리케이션 시작 시에 테스트용 유저를 하나 만들어서 저장해보자
+//    @Bean
+//    public ApplicationRunner applicationRunner() {
+//        return new ApplicationRunner() {
+//
+//            @Autowired
+//            AccountService accountService;
+//
+//            @Override
+//            public void run(ApplicationArguments args) throws Exception {
+//                Account seungmo = Account.builder()
+//                        .email("seungmo@email.com")
+//                        .password("seungmo")
+//                        .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+//                        .build();
+//                accountService.saveAccount(seungmo);
+//
+//            }
+//        };
+//    }
 }

@@ -59,22 +59,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations()); // 정적 리소스
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        // 스프링 시큐리티로 들어온 다음, 특정 파일들을 anonymous로 허용한다.
-        // 죽, 아무나 접근할 수 있는 요청을 만드는 것이다.
-//        http.authorizeRequests()
-//                .mvcMatchers("/docs/index.html").anonymous()
-//                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).anonymous();
-
-        http
-                .anonymous() // 익명 사용자를 허용한다.
-                    .and()
-                .formLogin() // 폼 인증을 사용한다.
-                    .and()
-                .authorizeRequests()
-                    //.mvcMatchers(HttpMethod.GET, "/api/**").anonymous() // 내가 허용할 메서드를 설정
-                    .mvcMatchers(HttpMethod.GET, "/api/**").authenticated() // 테스트를 위해 인증으로 설정
-                    .anyRequest().authenticated(); // 나머지는 인증이 필요로 하다.
-    }
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        // 스프링 시큐리티로 들어온 다음, 특정 파일들을 anonymous로 허용한다.
+//        // 죽, 아무나 접근할 수 있는 요청을 만드는 것이다.
+////        http.authorizeRequests()
+////                .mvcMatchers("/docs/index.html").anonymous()
+////                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).anonymous();
+//
+//        http
+//                .anonymous() // 익명 사용자를 허용한다.
+//                    .and()
+//                .formLogin() // 폼 인증을 사용한다.
+//                    .and()
+//                .authorizeRequests()
+//                    //.mvcMatchers(HttpMethod.GET, "/api/**").anonymous() // 내가 허용할 메서드를 설정
+//                    .mvcMatchers(HttpMethod.GET, "/api/**").authenticated() // 테스트를 위해 인증으로 설정
+//                    .anyRequest().authenticated(); // 나머지는 인증이 필요로 하다.
+//    }
 }

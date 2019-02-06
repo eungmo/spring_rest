@@ -318,7 +318,7 @@ public class EventConrollerTests extends BaseControllerTest {
     }
 
     @Test
-    @TestDescription("30개의 이벤트를 10개씩 볼 때, 두 번째 페이지 조회하기")
+    @TestDescription("인증되지 않은 사용자가 30개의 이벤트를 10개씩 볼 때, 두 번째 페이지 조회하기")
     public void queryEvents() throws Exception {
         // Given : 이벤트 30개
         IntStream.range(0, 30).forEach(this::generateEvent); // 메서드 레퍼런스로 간결하게
@@ -396,6 +396,33 @@ public class EventConrollerTests extends BaseControllerTest {
                                 fieldWithPath("page.number").description("the page number")
                         )
                 ))
+        ;
+    }
+
+    @Test
+    @TestDescription("인증된 사용자가 30개의 이벤트를 10개씩 볼 때, 두 번째 페이지 조회하기")
+    public void queryEventsWithAuthentication() throws Exception {
+        // Given : 이벤트 30개
+        IntStream.range(0, 30).forEach(this::generateEvent); // 메서드 레퍼런스로 간결하게
+
+        // When : 조회한다
+        this.mockMvc.perform(get("/api/events")
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .param("page", "1")
+                .param("size","10")
+                .param("sort", "name,DESC")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+        )
+
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andExpect(jsonPath("_links.create-event").exists())
+                .andDo(document("query-events"))
         ;
     }
 

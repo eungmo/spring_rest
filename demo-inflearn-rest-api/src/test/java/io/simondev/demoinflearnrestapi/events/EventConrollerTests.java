@@ -5,6 +5,7 @@ import io.simondev.demoinflearnrestapi.accounts.Account;
 import io.simondev.demoinflearnrestapi.accounts.AccountRepository;
 import io.simondev.demoinflearnrestapi.accounts.AccountRole;
 import io.simondev.demoinflearnrestapi.accounts.AccountService;
+import io.simondev.demoinflearnrestapi.common.AppProperties;
 import io.simondev.demoinflearnrestapi.common.BaseControllerTest;
 import io.simondev.demoinflearnrestapi.common.RestDocsConfiguration;
 import io.simondev.demoinflearnrestapi.common.TestDescription;
@@ -69,6 +70,9 @@ public class EventConrollerTests extends BaseControllerTest {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    AppProperties appProperties;
 
     // 인메모리 DB이긴 하지만 테스트가 돌고있는 중에는 DB를 공유하기 때문에
     // 데이터가 테스트 간에 독립적이지 않다.
@@ -293,22 +297,17 @@ public class EventConrollerTests extends BaseControllerTest {
 
     private String getAccessToken() throws Exception {
         // Given
-        String username = "seungmo@email.com";
-        String password = "seungmo";
         Account seungmo = Account.builder()
-                .email(username)
-                .password(password)
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
                 .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                 .build();
         this.accountService.saveAccount(seungmo);
 
-        String clientId = "myApp";
-        String clientSecret = "pass";
-
         ResultActions perform = this.mockMvc.perform(post("/oauth/token")
-                .with(httpBasic(clientId, clientSecret))
-                .param("username", username)
-                .param("password", password)
+                .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                .param("username", appProperties.getUserUsername())
+                .param("password", appProperties.getUserPassword())
                 .param("grant_type", "password")
         );
 

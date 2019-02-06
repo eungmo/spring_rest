@@ -1,8 +1,10 @@
 package io.simondev.demoinflearnrestapi.configs;
 
 import io.simondev.demoinflearnrestapi.accounts.Account;
+import io.simondev.demoinflearnrestapi.accounts.AccountRepository;
 import io.simondev.demoinflearnrestapi.accounts.AccountRole;
 import io.simondev.demoinflearnrestapi.accounts.AccountService;
+import io.simondev.demoinflearnrestapi.common.AppProperties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -27,24 +29,33 @@ public class AppConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-//    // 애플리케이션 시작 시에 테스트용 유저를 하나 만들어서 저장해보자
-//    @Bean
-//    public ApplicationRunner applicationRunner() {
-//        return new ApplicationRunner() {
-//
-//            @Autowired
-//            AccountService accountService;
-//
-//            @Override
-//            public void run(ApplicationArguments args) throws Exception {
-//                Account seungmo = Account.builder()
-//                        .email("seungmo@email.com")
-//                        .password("seungmo")
-//                        .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
-//                        .build();
-//                accountService.saveAccount(seungmo);
-//
-//            }
-//        };
-//    }
+    // 애플리케이션 시작 시에 테스트용 유저를 하나 만들어서 저장해보자
+    @Bean
+    public ApplicationRunner applicationRunner() {
+        return new ApplicationRunner() {
+
+            @Autowired
+            AccountService accountService;
+
+            @Autowired
+            AppProperties appProperties;
+
+            @Override
+            public void run(ApplicationArguments args) throws Exception {
+                Account admin = Account.builder()
+                        .email(appProperties.getAdminUsername())
+                        .password(appProperties.getAdminPassword())
+                        .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+                        .build();
+                accountService.saveAccount(admin);
+
+                Account user = Account.builder()
+                        .email(appProperties.getUserUsername())
+                        .password(appProperties.getUserPassword())
+                        .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+                        .build();
+                accountService.saveAccount(user);
+            }
+        };
+    }
 }

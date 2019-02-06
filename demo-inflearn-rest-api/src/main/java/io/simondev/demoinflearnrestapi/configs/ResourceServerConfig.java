@@ -35,7 +35,5 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .and()
             .exceptionHandling() // 인증이 잘 못되거나, 권한이 없는 경우,
                 .accessDeniedHandler(new OAuth2AccessDeniedHandler()); // 그 중 권한이 없는 경우, 이 핸들러를 사용
-
-
     }
 }

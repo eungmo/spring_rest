@@ -1,6 +1,8 @@
 package io.simondev.demoinflearnrestapi.events;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.simondev.demoinflearnrestapi.accounts.Account;
+import io.simondev.demoinflearnrestapi.accounts.AccountSerializer;
 import lombok.*;
 
 import javax.persistence.*;
@@ -32,8 +34,9 @@ public class Event {
     private EventStatus eventStatus = EventStatus.DRAFT;
     // 이벤트에서만 Owner를 참조할 수 있도록 단방향 맵핑을 한다.
     @ManyToOne
+    // 이 클래스의 객체를 JSON Serialize할 때 이 Serializer를 사용하도록 한다.
+    @JsonSerialize(using = AccountSerializer.class)
     private Account manager;
-
 
     public void update() {
         // Update free

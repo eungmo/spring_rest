@@ -282,6 +282,7 @@ public class EventConrollerTests extends BaseControllerTest {
                                 fieldWithPath("offline").description("it tells if this event is offline event or not"),
                                 fieldWithPath("manager").description("manager of new event"),
                                 fieldWithPath("eventStatus").description("event status"),
+                                fieldWithPath("manager.id").description("manager id of new event"),
                                 fieldWithPath("_links.self.href").description("link to the self"),
                                 fieldWithPath("_links.query-events.href").description("link to query event list"),
                                 fieldWithPath("_links.update-event.href").description("link to update existing event"),
@@ -297,12 +298,12 @@ public class EventConrollerTests extends BaseControllerTest {
 
     private String getAccessToken() throws Exception {
         // Given
-        Account seungmo = Account.builder()
+        Account user = Account.builder()
                 .email(appProperties.getUserUsername())
                 .password(appProperties.getUserPassword())
                 .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                 .build();
-        this.accountService.saveAccount(seungmo);
+        this.accountService.saveAccount(user);
 
         ResultActions perform = this.mockMvc.perform(post("/oauth/token")
                 .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
